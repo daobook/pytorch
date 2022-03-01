@@ -17,10 +17,10 @@ TARGET_COMMIT = os.environ.get("CIRCLE_SHA1", "")
 build_base_url = AZURE_PIPELINE_BASE_URL + "_apis/build/builds?api-version=6.0"
 
 s = requests.Session()
-s.headers.update({"Authorization": "Basic " + AZURE_DEVOPS_PAT_BASE64})
+s.headers.update({"Authorization": f"Basic {AZURE_DEVOPS_PAT_BASE64}"})
 
 def submit_build(pipeline_id, project_id, source_branch, source_version):
-    print("Submitting build for branch: " + source_branch)
+    print(f"Submitting build for branch: {source_branch}")
     print("Commit SHA1: ", source_version)
 
     run_build_raw = s.post(build_base_url, json={
@@ -39,7 +39,7 @@ def submit_build(pipeline_id, project_id, source_branch, source_version):
 
     build_id = run_build_json['id']
 
-    print("Submitted bulid: " + str(build_id))
+    print(f"Submitted bulid: {str(build_id)}")
     print("Bulid URL: " + run_build_json['url'])
     return build_id
 
@@ -62,7 +62,7 @@ def wait_for_build(_id):
     build_status = build_detail['status']
 
     while build_status == 'notStarted':
-        print('Waiting for run to start: ' + str(_id))
+        print(f'Waiting for run to start: {str(_id)}')
         sys.stdout.flush()
         try:
             build_detail = get_build(_id)
@@ -73,12 +73,12 @@ def wait_for_build(_id):
 
         time.sleep(30)
 
-    print("Bulid started: ", str(_id))
+    print("Bulid started: ", _id)
 
     handled_logs = set()
     while build_status == 'inProgress':
         try:
-            print("Waiting for log: " + str(_id))
+            print(f"Waiting for log: {str(_id)}")
             logs = get_build_logs(_id)
         except Exception as e:
             print("Error fetching logs")
@@ -105,8 +105,8 @@ def wait_for_build(_id):
 
     build_result = build_detail['result']
 
-    print("Bulid status: " + build_status)
-    print("Bulid result: " + build_result)
+    print(f"Bulid status: {build_status}")
+    print(f"Bulid result: {build_result}")
 
     return build_status, build_result
 
@@ -126,15 +126,14 @@ if __name__ == '__main__':
         build_id = submit_build(PIPELINE_ID, PROJECT_ID, SOURCE_BRANCH, TARGET_COMMIT)
         build_status, build_result = wait_for_build(build_id)
 
-        if build_result != 'succeeded':
-            retry = retry - 1
-            if retry > 0:
-                print("Retrying... remaining attempt: " + str(retry))
-                # Wait a bit before retrying
-                time.sleep((MAX_RETRY - retry) * 120)
-                continue
-            else:
-                print("No more chance to retry. Giving up.")
-                sys.exit(-1)
-        else:
+        if build_result == 'succeeded':
             break
+        retry -= 1
+        if retry > 0:
+            print(f"Retrying... remaining attempt: {retry}")
+            # Wait a bit before retrying
+            time.sleep((MAX_RETRY - retry) * 120)
+            continue
+        else:
+            print("No more chance to retry. Giving up.")
+            sys.exit(-1)

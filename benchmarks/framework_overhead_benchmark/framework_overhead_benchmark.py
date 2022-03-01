@@ -54,7 +54,10 @@ def benchmark_simple_fn(args, config, module_config, module_type, result):
         latency_per_iter_ms = benchmark_module(config, module)
         result[op_name] = latency_per_iter_ms
     else:
-        f_name = module_config.pt_fn.__name__ + ":Num Operands=" + str(module_config.num_params)
+        f_name = f'{module_config.pt_fn.__name__}:Num Operands=' + str(
+            module_config.num_params
+        )
+
         graph_mode_str = "Graph mode" + ":" + str(module_config.graph_mode)
         result_key = ','.join((f_name, graph_mode_str))
         module = WrapperModule(module_type, module_config, args.debug, args.save)
@@ -82,15 +85,13 @@ def main():
     num_warmup_iters = args.num_warmup_iters
     num_iters = args.num_iters
     config = BenchmarkConfig(num_warmup_iters, num_iters)
-    graph_mode = True
-    if args.eager_mode:
-        graph_mode = False
     result = {}
     if args.op == "add_op":
         num_params = 2
         if args.benchmark_c2_net:
             module_config = ModuleConfig(None, 'Sum', num_params, None)
         else:
+            graph_mode = not args.eager_mode
             module_config = ModuleConfig(add_tensors_loop, None, num_params, graph_mode)
         benchmark_simple_fn(args, config, module_config, SimpleAddModule, result)
     print_results(result)

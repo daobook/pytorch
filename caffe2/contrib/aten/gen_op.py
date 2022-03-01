@@ -37,10 +37,7 @@ if args.aten_root:
         raise ValueError('aten_root ({}) does not exist'.format(
             args.aten_root))
     sys.path.insert(0, os.path.join(args.aten_root, '..'))
-    from tools.codegen.code_template import CodeTemplate as CT
-else:
-    from tools.codegen.code_template import CodeTemplate as CT
-
+from tools.codegen.code_template import CodeTemplate as CT
 OP_TEMPLATE = CT.from_file(
     os.path.join(args.template_dir, 'aten_op_template.h'))
 
@@ -103,7 +100,7 @@ SPECIAL_IMPLEMENTATIONS = {
 def expand(o):
     num_defaults = sum(1 if 'default' in arg else 0 for arg in o['arguments'])
     results = [o]
-    for i in range(0, num_defaults):
+    for i in range(num_defaults):
         # last num_default values should be default
         assert('default' in o['arguments'][-(i + 1)])
         v = deepcopy(o)
@@ -216,11 +213,14 @@ def get_num_inputs(o):
 
 
 def find_factory_methods(decls):
-    factory_methods = {}
-    for o in decls:
-        if any(arg['dynamic_type'] == 'at::TensorOptions' for arg in o['arguments']):
-            factory_methods[o['name']] = 0
-    return factory_methods
+    return {
+        o['name']: 0
+        for o in decls
+        if any(
+            arg['dynamic_type'] == 'at::TensorOptions'
+            for arg in o['arguments']
+        )
+    }
 
 
 def emit_assignments(o, env):
@@ -322,4 +322,7 @@ if __name__ == '__main__':
         top_env['implementations'].append(IMPLEMENTATION_TEMPLATE.substitute(env))
         top_env['cases'].append(CASE_TEMPLATE.substitute(env))
         key += 1
-    write(os.path.join(args.install_dir, args.output_prefix + "aten_op.h"), OP_TEMPLATE.substitute(top_env))
+    write(
+        os.path.join(args.install_dir, f'{args.output_prefix}aten_op.h'),
+        OP_TEMPLATE.substitute(top_env),
+    )

@@ -44,12 +44,9 @@ class ArithmeticOpsTest(serial.SerializedTestCase):
         pred_net_ref.external_input.extend(["A", "B"])
         pred_net_ref.external_output.append("C_ref")
         pred_net_ref.op.add().CopyFrom(
-            core.CreateOperator(
-                name + "FakeFp16",
-                ["A", "B"],
-                ["C_ref"],
-            )
+            core.CreateOperator(f'{name}FakeFp16', ["A", "B"], ["C_ref"])
         )
+
 
         shape_hints = {"A": A.shape, "B": B.shape}
         pred_net_onnxified = onnxifi_caffe2_net(pred_net,
@@ -138,11 +135,9 @@ class UnaryOpTest(serial.SerializedTestCase):
         ref_net.external_input.append("X")
         ref_net.external_output.append("Y")
         ref_net.op.add().CopyFrom(
-            core.CreateOperator(
-                opname + 'FakeFp16NNPI',
-                ['X'],
-                ['Y'])
+            core.CreateOperator(f'{opname}FakeFp16NNPI', ['X'], ['Y'])
         )
+
         print("REF NET = {}".format(ref_net))
 
         shape_hints = {"X": X.shape}
@@ -167,8 +162,8 @@ class UnaryOpTest(serial.SerializedTestCase):
 
         if not np.allclose(Y_c2, Y_glow, rtol=atol, atol=atol):
             diff = np.abs(Y_c2 - Y_glow)
-            np.save('/tmp/' + opname + 'diff', diff)
-            np.save('/tmp/' + opname + 'result', Y_c2)
+            np.save(f'/tmp/{opname}diff', diff)
+            np.save(f'/tmp/{opname}result', Y_c2)
             print_test_debug_info(opname, {
                 "X": X,
                 "Y_c2": Y_c2,

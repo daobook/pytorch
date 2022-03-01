@@ -7,7 +7,7 @@ CONFIG_TREE_DATA = [
 
 def get_major_pyver(dotted_version):
     parts = dotted_version.split(".")
-    return "py" + parts[0]
+    return f"py{parts[0]}"
 
 
 class TreeConfigNode(ConfigNode):
@@ -97,7 +97,7 @@ class SlowGradcheckConfigNode(TreeConfigNode):
 
 class PureTorchConfigNode(TreeConfigNode):
     def modify_label(self, label):
-        return "PURE_TORCH=" + str(label)
+        return f"PURE_TORCH={str(label)}"
 
     def init2(self, node_name):
         self.props["is_pure_torch"] = node_name
@@ -108,7 +108,7 @@ class PureTorchConfigNode(TreeConfigNode):
 
 class XlaConfigNode(TreeConfigNode):
     def modify_label(self, label):
-        return "XLA=" + str(label)
+        return f"XLA={str(label)}"
 
     def init2(self, node_name):
         self.props["is_xla"] = node_name
@@ -118,7 +118,7 @@ class XlaConfigNode(TreeConfigNode):
 
 class MLCConfigNode(TreeConfigNode):
     def modify_label(self, label):
-        return "MLC=" + str(label)
+        return f"MLC={str(label)}"
 
     def init2(self, node_name):
         self.props["is_mlc"] = node_name
@@ -129,7 +129,7 @@ class MLCConfigNode(TreeConfigNode):
 
 class AsanConfigNode(TreeConfigNode):
     def modify_label(self, label):
-        return "Asan=" + str(label)
+        return f"Asan={str(label)}"
 
     def init2(self, node_name):
         self.props["is_asan"] = node_name
@@ -140,7 +140,7 @@ class AsanConfigNode(TreeConfigNode):
 
 class ONNXConfigNode(TreeConfigNode):
     def modify_label(self, label):
-        return "Onnx=" + str(label)
+        return f"Onnx={str(label)}"
 
     def init2(self, node_name):
         self.props["is_onnx"] = node_name
@@ -151,7 +151,7 @@ class ONNXConfigNode(TreeConfigNode):
 
 class VulkanConfigNode(TreeConfigNode):
     def modify_label(self, label):
-        return "Vulkan=" + str(label)
+        return f"Vulkan={str(label)}"
 
     def init2(self, node_name):
         self.props["is_vulkan"] = node_name
@@ -162,7 +162,7 @@ class VulkanConfigNode(TreeConfigNode):
 
 class ParallelTBBConfigNode(TreeConfigNode):
     def modify_label(self, label):
-        return "PARALLELTBB=" + str(label)
+        return f"PARALLELTBB={str(label)}"
 
     def init2(self, node_name):
         self.props["parallel_backend"] = "paralleltbb"
@@ -181,7 +181,7 @@ class NoarchConfigNode(TreeConfigNode):
 
 class ParallelNativeConfigNode(TreeConfigNode):
     def modify_label(self, label):
-        return "PARALLELNATIVE=" + str(label)
+        return f"PARALLELNATIVE={str(label)}"
 
     def init2(self, node_name):
         self.props["parallel_backend"] = "parallelnative"
@@ -192,7 +192,7 @@ class ParallelNativeConfigNode(TreeConfigNode):
 
 class LibTorchConfigNode(TreeConfigNode):
     def modify_label(self, label):
-        return "BUILD_TEST_LIBTORCH=" + str(label)
+        return f"BUILD_TEST_LIBTORCH={str(label)}"
 
     def init2(self, node_name):
         self.props["is_libtorch"] = node_name
@@ -227,7 +227,7 @@ class ShardTestConfigNode(TreeConfigNode):
 
 class ImportantConfigNode(TreeConfigNode):
     def modify_label(self, label):
-        return "IMPORTANT=" + str(label)
+        return f"IMPORTANT={str(label)}"
 
     def init2(self, node_name):
         self.props["is_important"] = node_name

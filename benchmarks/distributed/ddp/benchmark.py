@@ -87,7 +87,7 @@ def run_benchmark(benchmark, ranks, opts):
     measurements = []
     if dist.get_rank() in set(ranks):
         if not opts:
-            opts = dict()
+            opts = {}
         measurements = benchmark_process_group(group, benchmark, **opts)
     dist.destroy_process_group(group)
     dist.barrier()
@@ -112,7 +112,7 @@ def sweep(benchmark):
     def print_header():
         local_print("\n")
         local_print("%22s" % "")
-        for p in [50, 75, 90, 95]:
+        for _ in [50, 75, 90, 95]:
             local_print("%14s%10s" % ("sec/iter", "ex/sec"))
         local_print("\n")
 
@@ -250,13 +250,20 @@ def main():
                 bucket_size=args.bucket_size,
                 model=args.model))
     else:
-        for model in ["resnet50", "resnet101", "resnext50_32x4d", "resnext101_32x8d"]:
-            benchmarks.append(
-                TorchvisionBenchmark(
-                    device=device,
-                    distributed_backend=args.distributed_backend,
-                    bucket_size=args.bucket_size,
-                    model=model))
+        benchmarks.extend(
+            TorchvisionBenchmark(
+                device=device,
+                distributed_backend=args.distributed_backend,
+                bucket_size=args.bucket_size,
+                model=model,
+            )
+            for model in [
+                "resnet50",
+                "resnet101",
+                "resnext50_32x4d",
+                "resnext101_32x8d",
+            ]
+        )
 
     benchmark_results = []
     for benchmark in benchmarks:

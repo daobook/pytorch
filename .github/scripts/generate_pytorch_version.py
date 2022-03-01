@@ -79,7 +79,7 @@ class PytorchVersion:
         return f"{get_tag()}{self.get_post_build_suffix()}"
 
     def get_nightly_version(self) -> str:
-        date_str = datetime.today().strftime('%Y%m%d')
+        date_str = datetime.now().strftime('%Y%m%d')
         build_suffix = self.get_post_build_suffix()
         return f"{get_base_version()}.dev{date_str}{build_suffix}"
 

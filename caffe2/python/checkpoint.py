@@ -83,10 +83,7 @@ class Job(context.Managed):
         self._nodes_to_checkpoint = nodes_to_checkpoint
 
     def nodes_to_checkpoint(self):
-        if self._nodes_to_checkpoint:
-            return self._nodes_to_checkpoint
-        else:
-            return self.init_group.used_nodes()
+        return self._nodes_to_checkpoint or self.init_group.used_nodes()
 
     def compile(self, session_class):
         self._nodes_to_checkpoint = self.nodes_to_checkpoint()
@@ -122,7 +119,7 @@ def get_ckpt_filename(node_name, epoch):
     Returns:
         ckpt_filename: A string. The filename of the checkpoint.
     """
-    return node_name + '.' + str(epoch)
+    return f'{node_name}.{str(epoch)}'
 
 
 def db_name(epoch, node_name, db_prefix, path_prefix=None):
@@ -139,11 +136,9 @@ def db_name(epoch, node_name, db_prefix, path_prefix=None):
             files are saved
     """
     if path_prefix:
-        db_name = path_prefix + get_ckpt_filename(node_name, epoch)
-    else:
-        ckpt_filename = get_ckpt_filename(node_name, epoch)
-        db_name = os.path.join(db_prefix, ckpt_filename)
-    return db_name
+        return path_prefix + get_ckpt_filename(node_name, epoch)
+    ckpt_filename = get_ckpt_filename(node_name, epoch)
+    return os.path.join(db_prefix, ckpt_filename)
 
 
 class CheckpointManager(object):
