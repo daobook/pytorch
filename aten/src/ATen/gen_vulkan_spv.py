@@ -34,12 +34,12 @@ def genCppH(hFilePath, cppFilePath, srcDirPath, glslcPath, tmpDirPath, env):
         print("name {}".format(name))
 
         codeTemplate = CodeTemplate.from_file(templateSrcPath)
-        srcPath = tmpDirPath + "/" + name + ".glsl"
+        srcPath = f'{tmpDirPath}/{name}.glsl'
         content = codeTemplate.substitute(env)
         with open(srcPath, 'w') as f:
             f.write(content)
 
-        spvPath = tmpDirPath + "/" + name + ".spv"
+        spvPath = f'{tmpDirPath}/{name}.spv'
         print("spvPath {}".format(spvPath))
 
         cmd = [
@@ -54,8 +54,7 @@ def genCppH(hFilePath, cppFilePath, srcDirPath, glslcPath, tmpDirPath, env):
         subprocess.check_call(cmd)
         spvPaths.append(spvPath)
 
-    h = "#pragma once\n"
-    h += "#include <stdint.h>\n"
+    h = "#pragma once\n" + "#include <stdint.h>\n"
     nsbegin = "\nnamespace at { namespace native { namespace vulkan { \n"
     nsend = "\n} } } //namespace at::native::vulkan\n"
 
@@ -66,11 +65,11 @@ def genCppH(hFilePath, cppFilePath, srcDirPath, glslcPath, tmpDirPath, env):
 
     for spvPath in spvPaths:
         name = getName(spvPath)
-        name_len = name + "_len"
+        name_len = f'{name}_len'
         h += "extern const uint32_t {}[];\n".format(name)
         h += "extern const uint32_t {};\n".format(name_len)
 
-        cpp += "const uint32_t " + name + "[] = {\n"
+        cpp += f"const uint32_t {name}" + "[] = {\n"
         sizeBytes = 0
         print("spvPath:{}".format(spvPath))
         with open(spvPath, 'rb') as f:
@@ -139,12 +138,13 @@ def main(argv):
         os.makedirs(options.tmp_dir_path)
 
     genCppH(
-        hFilePath=options.output_path + "/spv.h",
-        cppFilePath=options.output_path + "/spv.cpp",
+        hFilePath=f'{options.output_path}/spv.h',
+        cppFilePath=f'{options.output_path}/spv.cpp',
         srcDirPath=options.glsl_path,
         glslcPath=options.glslc_path,
         tmpDirPath=options.tmp_dir_path,
-        env=env)
+        env=env,
+    )
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

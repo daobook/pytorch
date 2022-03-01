@@ -40,12 +40,7 @@ class Conf:
     # TODO: Eliminate the special casing for docker paths
     # In the short term, we *will* need to support special casing as docker images are merged for caffe2 and pytorch
     def get_parms(self, for_docker):
-        leading = []
-        # We just don't run non-important jobs on pull requests;
-        # previously we also named them in a way to make it obvious
-        # if self.is_important and not for_docker:
-        #    leading.append("AAA")
-        leading.append("pytorch")
+        leading = ["pytorch"]
         if self.is_xla and not for_docker:
             leading.append("xla")
         if self.is_vulkan and not for_docker:
@@ -60,7 +55,7 @@ class Conf:
         cuda_parms = []
         if self.cuda_version:
             cudnn = "cudnn8" if self.cuda_version.startswith("11.") else "cudnn7"
-            cuda_parms.extend(["cuda" + self.cuda_version, cudnn])
+            cuda_parms.extend([f"cuda{self.cuda_version}", cudnn])
         if self.rocm_version:
             cuda_parms.extend([f"rocm{self.rocm_version}"])
         result = leading + ["linux", self.distro] + cuda_parms + self.parms
@@ -105,7 +100,7 @@ class Conf:
         if Conf.is_test_phase(phase):
             resource_class = "large"
             if self.gpu_resource:
-                resource_class = "gpu." + self.gpu_resource
+                resource_class = f"gpu.{self.gpu_resource}"
             if self.rocm_version is not None:
                 resource_class = "pytorch/amd-gpu"
             parameters["resource_class"] = resource_class
@@ -179,16 +174,17 @@ class DocPushConf(object):
         }
 
 def gen_docs_configs(xenial_parent_config):
-    configs = []
-
-    configs.append(
+    configs = [
         HiddenConf(
             "pytorch_python_doc_build",
             parent_build=xenial_parent_config,
-            filters=gen_filter_dict(branches_list=["master", "nightly"],
-                                    tags_list=RC_PATTERN),
+            filters=gen_filter_dict(
+                branches_list=["master", "nightly"], tags_list=RC_PATTERN
+            ),
         )
-    )
+    ]
+
+
     configs.append(
         DocPushConf(
             "pytorch_python_doc_push",
@@ -221,8 +217,7 @@ def get_root():
 
 def gen_tree():
     root = get_root()
-    configs_list = conf_tree.dfs(root)
-    return configs_list
+    return conf_tree.dfs(root)
 
 
 def instantiate_configs(only_slow_gradcheck):
@@ -250,7 +245,7 @@ def instantiate_configs(only_slow_gradcheck):
             continue
 
         python_version = None
-        if compiler_name == "cuda" or compiler_name == "android":
+        if compiler_name in ["cuda", "android"]:
             python_version = fc.find_prop("pyver")
             parms_list = [fc.find_prop("abbreviated_pyver")]
         else:
@@ -269,7 +264,7 @@ def instantiate_configs(only_slow_gradcheck):
             android_ndk_version = fc.find_prop("compiler_version")
             # TODO: do we need clang to compile host binaries like protoc?
             parms_list.append("clang5")
-            parms_list.append("android-ndk-" + android_ndk_version)
+            parms_list.append(f"android-ndk-{android_ndk_version}")
             android_abi = fc.find_prop("android_abi")
             parms_list_ignored_for_docker_image.append(android_abi)
             restrict_phases = ["build"]
@@ -309,9 +304,7 @@ def instantiate_configs(only_slow_gradcheck):
             restrict_phases = ["build"]
 
         if is_slow_gradcheck:
-            parms_list_ignored_for_docker_image.append("old")
-            parms_list_ignored_for_docker_image.append("gradcheck")
-
+            parms_list_ignored_for_docker_image.extend(("old", "gradcheck"))
         gpu_resource = None
         if cuda_version and cuda_version != "10":
             gpu_resource = "medium"
@@ -365,16 +358,17 @@ def get_workflow_jobs(only_slow_gradcheck=False):
 
         phases = conf_options.restrict_phases or dimensions.PHASES
 
-        for phase in phases:
-
-            # TODO why does this not have a test?
-            if Conf.is_test_phase(phase) and conf_options.cuda_version == "10":
-                continue
-
-            x.append(conf_options.gen_workflow_job(phase))
+        x.extend(
+            conf_options.gen_workflow_job(phase)
+            for phase in phases
+            if not Conf.is_test_phase(phase)
+            or conf_options.cuda_version != "10"
+        )
 
         # TODO convert to recursion
-        for conf in conf_options.get_dependents():
-            x.append(conf.gen_workflow_job("test"))
+        x.extend(
+            conf.gen_workflow_job("test")
+            for conf in conf_options.get_dependents()
+        )
 
     return x

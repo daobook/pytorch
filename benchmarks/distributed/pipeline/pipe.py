@@ -95,8 +95,10 @@ class TransformerLMSequential(nn.Sequential):
             EmbeddingLayer(ntokens, ninp, initrange),
             PositionalEncodingLayer(ninp, dropout),
         ]
-        for _ in range(ndecoder):
-            layers.append(TransformerDecoderLayer(ninp, nhead, nhid, dropout))
+        layers.extend(
+            TransformerDecoderLayer(ninp, nhead, nhid, dropout)
+            for _ in range(ndecoder)
+        )
 
         layers.append(LinearLayer(ninp, ntokens, initrange))
         super(TransformerLMSequential, self).__init__(*layers)
@@ -134,16 +136,10 @@ def train(lm_dataloader, model, criterion, optimizer, vocab_size, args):
     optimizer = optimizer(model)
 
     def get_first_device(model):
-        if model.devices:
-            return model.devices[0]
-        else:
-            return torch.cuda.current_device()
+        return model.devices[0] if model.devices else torch.cuda.current_device()
 
     def get_last_device(model):
-        if model.devices:
-            return model.devices[-1]
-        else:
-            return torch.cuda.current_device()
+        return model.devices[-1] if model.devices else torch.cuda.current_device()
 
 
     print('Number of parameters for model: {}'.format(sum(p.numel() for p in model.parameters())))

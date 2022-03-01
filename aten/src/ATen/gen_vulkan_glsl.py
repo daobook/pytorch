@@ -12,10 +12,7 @@ DEFAULT_ENV = {"precision": "highp", "format": "rgba32f"}
 
 def findAllGlsls(path):
     vexs = glob.glob(os.path.join(path, '**', '*.glsl'), recursive=True)
-    output = []
-    for f in vexs:
-        if len(f) > 1:
-            output.append(f)
+    output = [f for f in vexs if len(f) > 1]
     output.sort()
     return output
 
@@ -25,22 +22,20 @@ def getName(filePath):
 def genCppH(hFilePath, cppFilePath, templateGlslPaths, tmpDirPath, env):
     print("hFilePath:{}".format(hFilePath))
     print("cppFilePath:{}".format(cppFilePath))
-    h = "#pragma once\n"
     nsbegin = "\nnamespace at { namespace native { namespace vulkan { \n"
     nsend = "\n} } } //namespace at::native::vulkan\n"
 
-    h += nsbegin
-
+    h = "#pragma once\n" + nsbegin
     cpp = "#include <ATen/native/vulkan/{}>".format(H_NAME)
     cpp += nsbegin
 
     for templateGlslPath in templateGlslPaths:
         name = getName(templateGlslPath)
-        h += "extern const char* " + name + ";\n"
-        cpp += "const char* " + name + " = \n"
+        h += f"extern const char* {name}" + ";\n"
+        cpp += f"const char* {name}" + " = \n"
 
         codeTemplate = CodeTemplate.from_file(templateGlslPath)
-        srcPath = tmpDirPath + "/" + name + ".glsl"
+        srcPath = f'{tmpDirPath}/{name}.glsl'
         content = codeTemplate.substitute(env)
 
         lines = content.split("\n")
@@ -106,10 +101,12 @@ def main(argv):
 
     glsls = findAllGlsls(options.glsl_path)
     genCppH(
-        options.output_path + "/" + H_NAME, options.output_path + "/" + CPP_NAME,
+        f'{options.output_path}/{H_NAME}',
+        f'{options.output_path}/{CPP_NAME}',
         glsls,
         tmpDirPath=options.tmp_dir_path,
-        env=env)
+        env=env,
+    )
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

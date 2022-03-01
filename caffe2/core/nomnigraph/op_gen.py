@@ -99,7 +99,7 @@ def gen_class(op, op_def):
     attribute_setters = []
     for attr in attributes:
         lower_name = attr[0][0].lower() + attr[0][1:]
-        private_name = lower_name + "_"
+        private_name = f'{lower_name}_'
         default_arg = "" if len(attr) < 3 else " = {}".format(attr[2])
         name = attr[0]
         t = attr[1]
@@ -141,7 +141,7 @@ def gen_class(op, op_def):
             other_init = [default_init]
             for attr in attributes:
                 lower_name = attr[0][0].lower() + attr[0][1:]
-                private_name = lower_name + "_"
+                private_name = f'{lower_name}_'
                 other_init.append(
                     "{private_name}({other_op}.get{name}())".format(
                         name=attr[0], private_name=private_name, other_op=lower_other_op
@@ -188,20 +188,16 @@ def gen_class(op, op_def):
 
 
 def gen_classes(ops, op_list):
-    f = ""
-    for op in op_list:
-        f += gen_class(op, ops[op])
-    return f
+    return "".join(gen_class(op, ops[op]) for op in op_list)
 
 
 def gen_enum(op_list):
-    return ",\n".join([op for op in op_list]) + "\n"
+    return ",\n".join(list(op_list)) + "\n"
 
 
 def gen_names(op_list):
-    f = ""
-    for op in op_list:
-        f += dedent(
+    return "".join(
+        dedent(
             """
             case NNKind::{name}:
                 return \"{name}\";
@@ -209,7 +205,8 @@ def gen_names(op_list):
                 name=op
             )
         )
-    return f
+        for op in op_list
+    )
 
 
 if __name__ == "__main__":
@@ -227,19 +224,19 @@ if __name__ == "__main__":
             lines += [l.strip().decode("utf-8") for l in lines_tmp]
     ops, op_list = parse_lines(lines)
 
-    with open(install_dir + "/OpClasses.h", "wb") as f:
+    with open(f'{install_dir}/OpClasses.h', "wb") as f:
         f.write(gen_classes(ops, op_list).encode("utf-8"))
-    with open(install_dir + "/OpNames.h", "wb") as f:
+    with open(f'{install_dir}/OpNames.h', "wb") as f:
         f.write(gen_names(op_list).encode("utf-8"))
-    with open(install_dir + "/OpEnum.h", "wb") as f:
+    with open(f'{install_dir}/OpEnum.h', "wb") as f:
         f.write(gen_enum(op_list).encode("utf-8"))
 
     try:
-        cmd = ["clang-format", "-i", install_dir + "/OpClasses.h"]
+        cmd = ["clang-format", "-i", f'{install_dir}/OpClasses.h']
         call(cmd)
-        cmd = ["clang-format", "-i", install_dir + "/OpNames.h"]
+        cmd = ["clang-format", "-i", f'{install_dir}/OpNames.h']
         call(cmd)
-        cmd = ["clang-format", "-i", install_dir + "/OpEnum.h"]
+        cmd = ["clang-format", "-i", f'{install_dir}/OpEnum.h']
         call(cmd)
     except Exception:
         pass

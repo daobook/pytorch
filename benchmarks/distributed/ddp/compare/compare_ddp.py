@@ -205,8 +205,7 @@ def print_summary(buffer_size_to_metrics):
                 assert exp_latencies is not None
                 A_exp = np.array(exp_latencies)
                 # Yield option, mean, p50, p90, p95, p99 and delta.
-                row = [ddp_option]
-                row.append(np.mean(A_exp))
+                row = [ddp_option, np.mean(A_exp)]
                 append_delta(row, np.mean(A_baseline), np.mean(A_exp))
                 for px in [50, 90, 95, 99]:
                     base = np.percentile(A_baseline, px)
@@ -232,7 +231,7 @@ def main():
     # param_max_elements = 2359296 ~= 2.25M
     # Try different bucket sizes.
     buffer_size_in_mbs = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
-    print("buffer_size_in_mbs: " + str(buffer_size_in_mbs))
+    print(f"buffer_size_in_mbs: {buffer_size_in_mbs}")
     for buffer_size_in_M in buffer_size_in_mbs:
         print("\n\n=== NEW EXPERIMENT: buffer_size={}M, {} epochs, world_size={} ===".format(
             buffer_size_in_M, epochs, world_size))

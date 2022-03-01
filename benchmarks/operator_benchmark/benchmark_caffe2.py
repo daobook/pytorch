@@ -55,7 +55,7 @@ class Caffe2BenchmarkBase(object):
     def feed_tensor(self, tensor, device='cpu'):
         """ Similar to tensor, but can supply any data compatible with FeedBlob
         """
-        blob_name = 'blob_' + str(Caffe2BenchmarkBase.tensor_index)
+        blob_name = f'blob_{str(Caffe2BenchmarkBase.tensor_index)}'
         dev = self._device_option(device)
         with core.DeviceScope(dev):
             workspace.FeedBlob(blob_name, tensor)
@@ -65,9 +65,7 @@ class Caffe2BenchmarkBase(object):
     def module_name(self):
         """ this is used to label the operator being benchmarked
         """
-        if self.user_provided_name:
-            return self.user_provided_name
-        return self.__class__.__name__
+        return self.user_provided_name or self.__class__.__name__
 
     def set_module_name(self, name):
         self.user_provided_name = name
@@ -90,8 +88,7 @@ class Caffe2BenchmarkBase(object):
                 value = kargs[key]
                 test_name_str.append(
                     key + self._value_to_str(value))
-            name = (self.module_name() + '_' +
-                    '_'.join(test_name_str)).replace(" ", "")
+            name = ((f'{self.module_name()}_' + '_'.join(test_name_str))).replace(" ", "")
         elif name_type == "short":
             # this is used to generate test name based on unique index
             name = '_'.join([self.module_name(), 'test', str(Caffe2BenchmarkBase.test_index)])

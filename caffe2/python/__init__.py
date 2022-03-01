@@ -34,7 +34,7 @@ if sys.platform == "win32":
             len(glob.glob(os.path.join(py_dll_path, 'cudart64*.dll'))) == 0:
         cuda_version = torch_version.cuda
         cuda_version_1 = cuda_version.replace('.', '_')
-        cuda_path_var = 'CUDA_PATH_V' + cuda_version_1
+        cuda_path_var = f'CUDA_PATH_V{cuda_version_1}'
         default_path = 'C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v' + cuda_version
         cuda_path = os.path.join(os.getenv(cuda_path_var, default_path), 'bin')
     else:

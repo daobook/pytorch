@@ -106,9 +106,12 @@ class TestCase(hu.HypothesisTestCase):
                         "RedisStoreHandlerCreate",
                         [],
                         [store_handler],
-                        prefix=str(TestCase.test_counter) + "/",
+                        prefix=f'{str(TestCase.test_counter)}/',
                         host=redis_host,
-                        port=redis_port))
+                        port=redis_port,
+                    )
+                )
+
             else:
                 workspace.RunOperatorOnce(
                     core.CreateOperator(
@@ -118,7 +121,7 @@ class TestCase(hu.HypothesisTestCase):
                         path=tmpdir))
             common_world = "common_world"
         else:
-            common_world = str(existing_cw) + ".forked"
+            common_world = f'{str(existing_cw)}.forked'
 
         if existing_cw is not None:
             workspace.RunOperatorOnce(

@@ -82,8 +82,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Benchmark RecordFunction overhead for ResNet and LSTM models')
 
-    parser.add_argument('--models', nargs='*', default=['lstm_jit'],
-                        help='What model to run: ' + str(MODELS.keys()))
+    parser.add_argument(
+        '--models',
+        nargs='*',
+        default=['lstm_jit'],
+        help=f'What model to run: {str(MODELS.keys())}',
+    )
+
 
     parser.add_argument('--lstmSeqLength', default='100', type=int)
     parser.add_argument('--lstmNumLayers', default='1', type=int)

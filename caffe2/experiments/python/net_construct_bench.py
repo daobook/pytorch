@@ -56,8 +56,9 @@ def AddMomentumParameterUpdate(train_model, LR):
     for param in params:
         param_grad = train_model.param_to_grad[param]
         param_momentum = train_model.param_init_net.ConstantFill(
-            [param], param + '_momentum', value=0.0
+            [param], f'{param}_momentum', value=0.0
         )
+
 
         # Update param_grad and param_momentum in place
         train_model.net.MomentumSGD(

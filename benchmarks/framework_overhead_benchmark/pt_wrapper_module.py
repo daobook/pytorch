@@ -22,14 +22,12 @@ class WrapperModule(object):
     def __init__(self, wrapped_type, module_config, debug, save=False):
         pt_fn = module_config.pt_fn
         self.module = wrapped_type(pt_fn)
-        self.tensor_inputs = []
         self.module_name = wrapped_type.__name__
-        for _ in range(module_config.num_params):
-            self.tensor_inputs.append(torch.randn(1))
+        self.tensor_inputs = [torch.randn(1) for _ in range(module_config.num_params)]
         if module_config.graph_mode:
             self.module = torch.jit.trace(self.module, self.tensor_inputs)
             if save:
-                file_name = self.module_name + "_" + pt_fn.__name__ + ".pt"
+                file_name = f'{self.module_name}_{pt_fn.__name__}.pt'
                 torch.jit.save(self.module, file_name)
                 print("Generated graph is saved in {}".format(file_name))
         print("Benchmarking module {} with fn {}: Graph mode:{}".format(self.module_name, pt_fn.__name__, module_config.graph_mode))

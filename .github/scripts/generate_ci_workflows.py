@@ -203,17 +203,17 @@ class CIWorkflow:
         err_message = f"invalid test_runner_type for {self.arch}: {self.test_runner_type}"
         if self.arch == 'linux':
             assert self.test_runner_type in LINUX_RUNNERS, err_message
-        if self.arch == 'windows':
+        elif self.arch == 'windows':
             assert self.test_runner_type in WINDOWS_RUNNERS, err_message
 
         if not self.ciflow_config.isolated_workflow:
             assert LABEL_CIFLOW_ALL in self.ciflow_config.labels
         if self.arch == 'linux':
             assert LABEL_CIFLOW_LINUX in self.ciflow_config.labels
-        if self.arch == 'windows':
-            assert LABEL_CIFLOW_WIN in self.ciflow_config.labels
-        if self.arch == 'macos':
+        elif self.arch == 'macos':
             assert LABEL_CIFLOW_MACOS in self.ciflow_config.labels
+        elif self.arch == 'windows':
+            assert LABEL_CIFLOW_WIN in self.ciflow_config.labels
         # Make sure that jobs with tests have a test_runner_type
         if not self.exclude_test:
             assert self.test_runner_type != ''
@@ -293,30 +293,31 @@ class CIWorkflow:
             configs["noarch"] = {"num_shards": 1, "runner": self.test_runner_type}
 
         for name, config in configs.items():
-            for shard in range(1, config["num_shards"] + 1):
-                test_jobs.append(
-                    {
-                        "id": f"test_{name}_{shard}_{config['num_shards']}",
-                        "name": f"test ({name}, {shard}, {config['num_shards']}, {config['runner']})",
-                        "config": name,
-                        "shard": shard,
-                        "num_shards": config["num_shards"],
-                        "runner": config["runner"],
-                    }
-                )
+            test_jobs.extend(
+                {
+                    "id": f"test_{name}_{shard}_{config['num_shards']}",
+                    "name": f"test ({name}, {shard}, {config['num_shards']}, {config['runner']})",
+                    "config": name,
+                    "shard": shard,
+                    "num_shards": config["num_shards"],
+                    "runner": config["runner"],
+                }
+                for shard in range(1, config["num_shards"] + 1)
+            )
 
         if self.enable_default_test:
-            for shard in range(1, self.num_test_shards + 1):
-                test_jobs.append(
-                    {
-                        "id": f"test_default_{shard}_{self.num_test_shards}",
-                        "name": f"test (default, {shard}, {self.num_test_shards}, {self.test_runner_type})",
-                        "config": "default",
-                        "shard": shard,
-                        "num_shards": self.num_test_shards,
-                        "runner": self.test_runner_type,
-                    }
-                )
+            test_jobs.extend(
+                {
+                    "id": f"test_default_{shard}_{self.num_test_shards}",
+                    "name": f"test (default, {shard}, {self.num_test_shards}, {self.test_runner_type})",
+                    "config": "default",
+                    "shard": shard,
+                    "num_shards": self.num_test_shards,
+                    "runner": self.test_runner_type,
+                }
+                for shard in range(1, self.num_test_shards + 1)
+            )
+
         return test_jobs
 
 @dataclass

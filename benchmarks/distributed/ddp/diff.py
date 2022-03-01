@@ -31,7 +31,7 @@ def main():
     for key in sorted(keys):
         va = str(ja.get(key, "-"))
         vb = str(jb.get(key, "-"))
-        print("{:20s} {:>20s}  vs  {:>20s}".format(key + ":", va, vb))
+        print("{:20s} {:>20s}  vs  {:>20s}".format(f'{key}:', va, vb))
     print("")
 
     ba = ja["benchmark_results"]

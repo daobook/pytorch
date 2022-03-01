@@ -21,8 +21,10 @@ def get_external_blob_names(net, lexical_scope):
     net_ssa, _ = core.get_ssa(net_proto)
     input_names = core.get_undefined_blobs(net_ssa)
     for input_name in input_names:
-        assert str(input_name) in lexical_scope, \
-            "Input blob " + input_name + " is undefined"
+        assert (
+            str(input_name) in lexical_scope
+        ), f"Input blob {input_name} is undefined"
+
 
     output_names = set()
     for op in net_proto.op:
@@ -96,9 +98,7 @@ def add_if_op(if_net, cond_blob, lexical_scope, then_net, else_net=None):
         outer_blobs_idx=then_outer_blob_names_idx)
     do_then_net.AddExternalOutput(*then_output_blobs)
 
-    if_args = {}
-    if_args['then_net'] = do_then_net.Proto()
-
+    if_args = {'then_net': do_then_net.Proto()}
     do_else_workspace_blob = None
     if else_net:
         do_else_net = core.Net('do_else_net')
@@ -114,8 +114,10 @@ def add_if_op(if_net, cond_blob, lexical_scope, then_net, else_net=None):
         else_outer_blob_names_idx = [
             else_input_output_names_ordered.index(b) for b in else_outer_blob_names]
 
-        do_else_workspace_blob = \
-            if_net.NextScopedBlob(if_net.Name() + '/workspace_if_else')
+        do_else_workspace_blob = if_net.NextScopedBlob(
+            f'{if_net.Name()}/workspace_if_else'
+        )
+
         else_input_blobs.append(do_else_workspace_blob)
         else_output_blobs.append(do_else_workspace_blob)
         # make sure that added workspace pointer blobs are in if inputs/outputs
@@ -174,8 +176,10 @@ def add_while_op(
     loop_body_outer_blob_names_idx = [
         loop_input_output_names_ordered.index(b) for b in loop_body_outer_blob_names]
 
-    do_loop_body_workspace_blob = \
-        while_net.NextScopedBlob(while_net.Name() + '/workspace_loop_body')
+    do_loop_body_workspace_blob = while_net.NextScopedBlob(
+        f'{while_net.Name()}/workspace_loop_body'
+    )
+
 
     loop_inputs.append(do_loop_body_workspace_blob)
     loop_outputs.append(do_loop_body_workspace_blob)
@@ -192,21 +196,16 @@ def add_while_op(
         copy_external_blobs=True)
     do_loop_body_net.AddExternalOutput(*loop_outputs)
 
-    while_args = {}
-    while_args['loop_net'] = do_loop_body_net.Proto()
-
+    while_args = {'loop_net': do_loop_body_net.Proto()}
     cond_workspace_blob = None
     if condition_body_net:
         cond_input_blob_names, cond_output_blob_names = get_external_blob_names(
             condition_body_net, lexical_scope)
 
-        # make sure condition blob is written by condition net and is
-        # visible outside of it
-        found_condition_output = False
-        for op in condition_body_net.Proto().op:
-            if str(cond_blob) in op.output:
-                found_condition_output = True
-                break
+        found_condition_output = any(
+            str(cond_blob) in op.output for op in condition_body_net.Proto().op
+        )
+
         assert found_condition_output, \
             "Condition net does not write into condition blob"
         if str(cond_blob) not in cond_output_blob_names:

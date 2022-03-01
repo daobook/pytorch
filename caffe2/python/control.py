@@ -365,9 +365,7 @@ def For(name, nets_or_steps, iter_num):
         _get_next_step_name('For-inner', name),
         _PrependNets(nets_or_steps, iter_net),
         should_stop_blob=iter_done)
-    return Do(name + '/For',
-              Do(name + '/For-init-net', init_net),
-              for_step)
+    return Do(f'{name}/For', Do(f'{name}/For-init-net', init_net), for_step)
 
 
 def While(name, condition_blob_or_net, nets_or_steps):
@@ -453,7 +451,7 @@ def DoWhile(name, condition_blob_or_net, nets_or_steps):
     # in nets_or_steps. This is not what we want. So we use BootNet to
     # set stop_blob to False.
     bool_net = BoolNet((stop_blob, False))
-    return Do(name + '/DoWhile', bool_net, core.scoped_execution_step(
+    return Do(f'{name}/DoWhile', bool_net, core.scoped_execution_step(
         _get_next_step_name('DoWhile-inner', name),
         nets_or_steps,
         should_stop_blob=stop_blob,
@@ -486,7 +484,7 @@ def DoUntil(name, condition_blob_or_net, nets_or_steps):
     # in nets_or_steps. This is not what we want. So we use BootNet to
     # set stop_blob to False.
     bool_net = BoolNet((stop_blob, False))
-    return Do(name + '/DoUntil', bool_net, core.scoped_execution_step(
+    return Do(f'{name}/DoUntil', bool_net, core.scoped_execution_step(
         _get_next_step_name('DoUntil-inner', name),
         nets_or_steps,
         should_stop_blob=stop_blob,
@@ -510,7 +508,11 @@ def Switch(name, *conditions):
     conditions = _MakeList(conditions)
     return core.scoped_execution_step(
         _get_next_step_name('Switch', name),
-        [_RunOnceIf(name + '/Switch', cond, step) for cond, step in conditions])
+        [
+            _RunOnceIf(f'{name}/Switch', cond, step)
+            for cond, step in conditions
+        ],
+    )
 
 
 def SwitchNot(name, *conditions):
@@ -520,8 +522,11 @@ def SwitchNot(name, *conditions):
     conditions = _MakeList(conditions)
     return core.scoped_execution_step(
         _get_next_step_name('SwitchNot', name),
-        [_RunOnceIfNot(name + '/SwitchNot', cond, step)
-         for cond, step in conditions])
+        [
+            _RunOnceIfNot(f'{name}/SwitchNot', cond, step)
+            for cond, step in conditions
+        ],
+    )
 
 
 def If(name, condition_blob_or_net,
@@ -536,8 +541,7 @@ def If(name, condition_blob_or_net,
     true/false_nets_or_steps so as to get the condition.
     """
     if not false_nets_or_steps:
-        return _RunOnceIf(name + '/If',
-                          condition_blob_or_net, true_nets_or_steps)
+        return _RunOnceIf(f'{name}/If', condition_blob_or_net, true_nets_or_steps)
 
     if isinstance(condition_blob_or_net, core.Net):
         condition_blob = GetConditionBlobFromNet(condition_blob_or_net)
@@ -545,10 +549,11 @@ def If(name, condition_blob_or_net,
         condition_blob = condition_blob_or_net
 
     return Do(
-        name + '/If',
-        _RunOnceIf(name + '/If-true',
-                   condition_blob_or_net, true_nets_or_steps),
-        _RunOnceIfNot(name + '/If-false', condition_blob, false_nets_or_steps)
+        f'{name}/If',
+        _RunOnceIf(
+            f'{name}/If-true', condition_blob_or_net, true_nets_or_steps
+        ),
+        _RunOnceIfNot(f'{name}/If-false', condition_blob, false_nets_or_steps),
     )
 
 
@@ -559,8 +564,10 @@ def IfNot(name, condition_blob_or_net,
     otherwise executes false_nets_or_steps
     """
     if not false_nets_or_steps:
-        return _RunOnceIfNot(name + '/IfNot',
-                             condition_blob_or_net, true_nets_or_steps)
+        return _RunOnceIfNot(
+            f'{name}/IfNot', condition_blob_or_net, true_nets_or_steps
+        )
+
 
     if isinstance(condition_blob_or_net, core.Net):
         condition_blob = GetConditionBlobFromNet(condition_blob_or_net)
@@ -568,8 +575,9 @@ def IfNot(name, condition_blob_or_net,
         condition_blob = condition_blob_or_net
 
     return Do(
-        name + '/IfNot',
-        _RunOnceIfNot(name + '/IfNot-true',
-                      condition_blob_or_net, true_nets_or_steps),
-        _RunOnceIf(name + '/IfNot-false', condition_blob, false_nets_or_steps)
+        f'{name}/IfNot',
+        _RunOnceIfNot(
+            f'{name}/IfNot-true', condition_blob_or_net, true_nets_or_steps
+        ),
+        _RunOnceIf(f'{name}/IfNot-false', condition_blob, false_nets_or_steps),
     )

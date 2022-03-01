@@ -28,8 +28,9 @@ def gen_param_update_builder_fun(self, model, dataset, is_train):
             for param in params:
                 param_grad = model.param_to_grad[param]
                 param_momentum = model.param_init_net.ConstantFill(
-                    [param], param + '_momentum', value=0.0
+                    [param], f'{param}_momentum', value=0.0
                 )
+
 
                 # Update param_grad and param_momentum in place
                 model.net.MomentumSGDUpdate(
